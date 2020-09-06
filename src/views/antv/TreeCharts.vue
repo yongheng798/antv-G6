@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-06 11:05:37
+ * @LastEditTime: 2020-09-06 12:36:32
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -16,6 +16,7 @@
 
 <script>
 import G6 from '@antv/g6'
+import insertCss from 'insert-css'
 
 export default {
   data() {
@@ -30,10 +31,55 @@ export default {
       this.createCharts()
     },
     createCharts() {
+      // 数据
+      const data = {
+        // 点集
+        nodes: [],
+        // 边集
+        // 边集
+        edges: [
+          // 表示一条从 node1 节点连接到 node2 节点的边
+          {
+            source: 'node1', // 起始点 id
+            target: 'node2', // 目标点 id
+            label: '我是连线' // 边的文本
+          }
+        ],
+        id: 'A',
+        children: [
+          {
+            id: 'A1',
+            children: [{ id: 'A11' }, { id: 'A12' }, { id: 'A13' }, { id: 'A14' }]
+          },
+          {
+            id: 'A2',
+            children: [
+              {
+                id: 'A21',
+                children: [{ id: 'A211' }, { id: 'A212' }]
+              },
+              {
+                id: 'A22'
+              }
+            ]
+          }
+        ]
+      }
+
+      // 左下角视图
+      insertCss(`
+        .g6-minimap-container {
+          border: 1px solid #e2e2e2;
+        }
+        .g6-minimap-viewport {
+          border: 2px solid rgb(25, 128, 255);
+        }
+      `)
+      // 自定义节点1
       G6.registerNode('card-node', {
         draw: function drawShape(cfg, group) {
           const r = 2
-          const color = '#5B8FF9'
+          const color = cfg.error ? '#F4664A' : '#30BF78'
           const w = cfg.size[0]
           const h = cfg.size[1]
           const shape = group.addShape('rect', {
@@ -111,27 +157,193 @@ export default {
         }
       })
 
-      const data = {
-        id: 'A',
-        children: [
-          {
-            id: 'A1',
-            children: [{ id: 'A11' }, { id: 'A12' }, { id: 'A13' }, { id: 'A14' }]
-          },
-          {
-            id: 'A2',
-            children: [
-              {
-                id: 'A21',
-                children: [{ id: 'A211' }, { id: 'A212' }]
+      // 自定义节点2
+      const ICON_MAP = {
+        a: 'https://gw.alipayobjects.com/mdn/rms_8fd2eb/afts/img/A*0HC-SawWYUoAAAAAAAAAAABkARQnAQ',
+        b: 'https://gw.alipayobjects.com/mdn/rms_8fd2eb/afts/img/A*sxK0RJ1UhNkAAAAAAAAAAABkARQnAQ'
+      }
+
+      G6.registerNode(
+        'card-node2',
+        {
+          drawShape: function drawShape(cfg, group) {
+            const color = cfg.error ? '#F4664A' : '#30BF78'
+            const r = 2
+            const shape = group.addShape('rect', {
+              attrs: {
+                x: 0,
+                y: 0,
+                width: 200,
+                height: 60,
+                stroke: color,
+                radius: r
+              },
+              name: 'main-box',
+              draggable: true
+            })
+
+            group.addShape('rect', {
+              attrs: {
+                x: 0,
+                y: 0,
+                width: 200,
+                height: 20,
+                fill: color,
+                radius: [r, r, 0, 0]
+              },
+              name: 'title-box',
+              draggable: true
+            })
+
+            // left icon
+            group.addShape('image', {
+              attrs: {
+                x: 4,
+                y: 2,
+                height: 16,
+                width: 16,
+                cursor: 'pointer',
+                img: ICON_MAP[cfg.nodeType || 'app']
+              },
+              name: 'node-icon'
+            })
+
+            // title text
+            group.addShape('text', {
+              attrs: {
+                textBaseline: 'top',
+                y: 2,
+                x: 24,
+                lineHeight: 20,
+                text: cfg.title,
+                fill: '#fff'
+              },
+              name: 'title'
+            })
+
+            if (cfg.nodeLevel > 0) {
+              group.addShape('marker', {
+                attrs: {
+                  x: 184,
+                  y: 30,
+                  r: 6,
+                  cursor: 'pointer',
+                  symbol: cfg.collapse ? G6.Marker.expand : G6.Marker.collapse,
+                  stroke: '#666',
+                  lineWidth: 1
+                },
+                name: 'collapse-icon'
+              })
+            }
+
+            // The content list
+            cfg.panels.forEach((item, index) => {
+              // name text
+              group.addShape('text', {
+                attrs: {
+                  textBaseline: 'top',
+                  y: 25,
+                  x: 24 + index * 60,
+                  lineHeight: 20,
+                  text: item.title,
+                  fill: 'rgba(0,0,0, 0.4)'
+                },
+                name: `index-title-${index}`
+              })
+
+              // value text
+              group.addShape('text', {
+                attrs: {
+                  textBaseline: 'top',
+                  y: 42,
+                  x: 24 + index * 60,
+                  lineHeight: 20,
+                  text: item.value,
+                  fill: '#595959'
+                },
+                name: `index-title-${index}`
+              })
+            })
+            return shape
+          }
+        },
+        'single-node'
+      )
+      // 边动画
+      G6.registerEdge(
+        'circle-running',
+        {
+          afterDraw(cfg, group) {
+            // get the first shape in the group, it is the edge's path here=
+            const shape = group.get('children')[0]
+            // the start position of the edge's path
+            const startPoint = shape.getPoint(0)
+
+            // add red circle shape
+            const circle = group.addShape('circle', {
+              attrs: {
+                x: startPoint.x,
+                y: startPoint.y,
+                fill: '#1890ff',
+                r: 3
+              },
+              name: 'circle-shape'
+            })
+
+            // animation for the red circle
+            circle.animate(
+              (ratio) => {
+                // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+                // get the position on the edge according to the ratio
+                const tmpPoint = shape.getPoint(ratio)
+                // returns the modified configurations here, x and y here
+                return {
+                  x: tmpPoint.x,
+                  y: tmpPoint.y
+                }
               },
               {
-                id: 'A22'
+                repeat: true, // Whether executes the animation repeatly
+                duration: 3000 // the duration for executing once
               }
-            ]
+            )
           }
-        ]
-      }
+        },
+        'cubic' // extend the built-in edge 'cubic'
+      )
+      // 鼠标经过提示
+      const tooltip = new G6.Tooltip({
+        // offsetX and offsetY include the padding of the parent container
+        // offsetX 与 offsetY 需要加上父容器的 padding
+        offsetX: 16 + 10,
+        offsetY: 24 + 10,
+        // the types of items that allow the tooltip show up
+        // 允许出现 tooltip 的 item 类型
+        itemTypes: ['node', 'edge'],
+        // custom the tooltip's content
+        // 自定义 tooltip 内容
+        getContent: (e) => {
+          const outDiv = document.createElement('div')
+          outDiv.style.width = 'fit-content'
+          // outDiv.style.padding = '0px 0px 20px 0px';
+          outDiv.innerHTML = `
+            <h4>Custom Content</h4>
+            <ul>
+              <li>Type: ${e.item.getType()}</li>
+            </ul>
+            <ul>
+              <li>Label: ${e.item.getModel().label || e.item.getModel().id}</li>
+            </ul>`
+          return outDiv
+        }
+      })
+
+      // 放大缩小
+      const minimap = new G6.ImageMinimap({
+        height: 100,
+        padding: 10,
+        graphImg: 'https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*DcGMQ7AN3Z0AAAAAAAAAAABkARQnAQ'
+      })
 
       const width = document.getElementById('mountNode').scrollWidth
       const height = document.getElementById('mountNode').scrollHeight || 500
@@ -151,8 +363,12 @@ export default {
         defaultEdge: {
           type: 'cubic-horizontal',
           style: {
-            stroke: '#A3B1BF',
-            endArrow: true
+            stroke: '#ff0000',
+            // endArrow: true,默认
+            endArrow: {
+              // 箭头样式
+              path: G6.Arrow.vee()
+            }
           }
         },
         layout: {
@@ -163,11 +379,15 @@ export default {
           getHeight: () => {
             return 60
           }
-        }
+        },
+        modes: {
+          default: ['drag-canvas', 'zoom-canvas', 'drag-node'] // 允许拖拽画布、放缩画布、拖拽节点
+        },
+        plugins: [minimap, tooltip]
       })
 
-      graph.data(data)
-      graph.render()
+      graph.data(data) // 加载数据
+      graph.render() // 渲染
       graph.fitView()
       graph.on('node:click', (e) => {
         if (e.target.get('name') === 'collapse-icon') {
@@ -182,5 +402,10 @@ export default {
 </script>
 
 <style lang="less" scoped>
-
+.g6-minimap-container {
+  border: 1px solid #e2e2e2;
+}
+.g6-minimap-viewport {
+  border: 2px solid rgb(25, 128, 255);
+}
 </style>

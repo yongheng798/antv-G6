@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:10:05
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-06 10:51:36
+ * @LastEditTime: 2020-09-06 12:37:16
  */
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -30,6 +30,11 @@ const routes = [
     path: '/treeCharts',
     name: 'TreeCharts',
     component: () => import('../views/antv/TreeCharts.vue')
+  },
+  {
+    path: '/eventsChart',
+    name: 'EventsChart',
+    component: () => import('../views/antv/EventsChart.vue')
   }
 ]
 
