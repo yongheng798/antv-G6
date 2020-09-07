@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-06 12:36:32
+ * @LastEditTime: 2020-09-07 23:02:03
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -46,20 +46,54 @@ export default {
           }
         ],
         id: 'A',
+        x: 20,
+        y: 20,
         children: [
           {
             id: 'A1',
-            children: [{ id: 'A11' }, { id: 'A12' }, { id: 'A13' }, { id: 'A14' }]
+            x: 20,
+            y: 20,
+            children: [
+              { id: 'A11',
+                x: 20,
+                y: 20
+              },
+              { id: 'A12',
+                x: 20,
+                y: 20
+              },
+              { id: 'A13',
+                x: 20,
+                y: 20
+              },
+              { id: 'A14',
+                x: 20,
+                y: 20
+              }
+            ]
           },
           {
             id: 'A2',
+            x: 20,
+            y: 20,
             children: [
               {
                 id: 'A21',
-                children: [{ id: 'A211' }, { id: 'A212' }]
+                children: [
+                  { id: 'A211',
+                    x: 20,
+                    y: 20
+                  },
+                  { id: 'A212',
+                    x: 20,
+                    y: 20
+                  }
+                ]
               },
               {
-                id: 'A22'
+                id: 'A22',
+                x: 20,
+                y: 20
               }
             ]
           }
@@ -73,6 +107,9 @@ export default {
         }
         .g6-minimap-viewport {
           border: 2px solid rgb(25, 128, 255);
+        }
+        .g6-component-toolbar li {
+          list-style-type: none !important;
         }
       `)
       // 自定义节点1
@@ -338,6 +375,9 @@ export default {
         }
       })
 
+      // 工具栏
+      const toolbar = new G6.ToolBar()
+
       // 放大缩小
       const minimap = new G6.ImageMinimap({
         height: 100,
@@ -348,27 +388,42 @@ export default {
       const width = document.getElementById('mountNode').scrollWidth
       const height = document.getElementById('mountNode').scrollHeight || 500
 
+      // 声明实例
       const graph = new G6.TreeGraph({
         container: 'mountNode',
         width,
         height,
         defaultNode: {
           type: 'card-node',
-          size: [100, 40],
+          size: [200, 100],
+          offset: 200,
           style: {
             fill: '#C6E5FF',
             stroke: '#5B8FF9'
           }
         },
         defaultEdge: {
-          type: 'cubic-horizontal',
+          type: 'cubic-vertical',
           style: {
             stroke: '#ff0000',
             // endArrow: true,默认
             endArrow: {
               // 箭头样式
-              path: G6.Arrow.vee()
+              path: G6.Arrow.vee(15, 20, 15), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
+              d: 15,
+              fill: '#ff0000',
+              stroke: '#ff0000',
+              opacity: 0.5,
+              lineWidth: 0
             }
+          }
+        },
+        // 交互样式
+        nodeStateStyles: {
+          hover: {
+            lineWidth: 2,
+            stroke: '#1890ff',
+            fill: '#e6f7ff'
           }
         },
         layout: {
@@ -383,12 +438,26 @@ export default {
         modes: {
           default: ['drag-canvas', 'zoom-canvas', 'drag-node'] // 允许拖拽画布、放缩画布、拖拽节点
         },
-        plugins: [minimap, tooltip]
+        // 设置为true，启用 redo & undo 栈功能
+        enabledStack: true,
+        fitViewPadding: [20, 30, 50, 20],
+        plugins: [minimap, tooltip, toolbar]
+      })
+      this.$nextTick(() => {
+        graph.data(data) // 加载数据
+        graph.render() // 渲染
+        graph.fitView()
+      })
+      // 鼠标经过交互事件
+      graph.on('node:mouseenter', (evt) => {
+        const { item } = evt
+        graph.setItemState(item, 'hover', true)
       })
 
-      graph.data(data) // 加载数据
-      graph.render() // 渲染
-      graph.fitView()
+      graph.on('node:mouseleave', (evt) => {
+        const { item } = evt
+        graph.setItemState(item, 'hover', false)
+      })
       graph.on('node:click', (e) => {
         if (e.target.get('name') === 'collapse-icon') {
           e.item.getModel().collapsed = !e.item.getModel().collapsed
