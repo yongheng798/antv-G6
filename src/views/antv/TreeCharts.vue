@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-07 23:02:03
+ * @LastEditTime: 2020-09-08 23:31:48
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -387,7 +387,75 @@ export default {
 
       const width = document.getElementById('mountNode').scrollWidth
       const height = document.getElementById('mountNode').scrollHeight || 500
+      console.log('G6.Util====', G6.Util)
 
+      const mindmapLayout = {
+        layout: {
+          type: 'mindmap',
+          direction: 'V', // H / V
+          getWidth: (d) => {
+            return 100
+          },
+          getHeight: (d) => {
+            return 100
+          },
+          getHGap: (d) => {
+            return 100
+          }, // 每个节点的水平间隙
+          getVGap: (d) => {
+            return 100
+          }, // 每个节点的垂直间隙
+          getSide: function getSide(d) {
+            return 'right'
+          }
+        }
+      }
+      console.log(mindmapLayout)
+
+      const dendrogramLayout = {
+        layout: {
+          type: 'dendrogram',
+          direction: 'LR', // H / V / LR / RL / TB / BT
+          nodeSep: 320,
+          rankSep: 320,
+          radial: false
+        }
+      }
+      console.log(dendrogramLayout)
+      const compactBoxLayout = {
+        layout: {
+          type: 'compactBox',
+          direction: 'LR',
+          getId: function getId(d) {
+            return d.id
+          },
+          getHeight: function getHeight() {
+            return 200
+          },
+          getWidth: function getWidth() {
+            return 100
+          },
+          getVGap: function getVGap() {
+            return 60
+          },
+          getHGap: function getHGap() {
+            return 30
+          }
+        }
+      }
+      console.log(compactBoxLayout)
+      const indentedLayout = {
+        layout: {
+          type: 'indented',
+          direction: 'LR',
+          dropCap: false,
+          indent: 360,
+          getHeight: () => {
+            return 60
+          }
+        }
+      }
+      console.log(indentedLayout)
       // 声明实例
       const graph = new G6.TreeGraph({
         container: 'mountNode',
@@ -409,8 +477,7 @@ export default {
             // endArrow: true,默认
             endArrow: {
               // 箭头样式
-              path: G6.Arrow.vee(15, 20, 15), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
-              d: 15,
+              path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
               fill: '#ff0000',
               stroke: '#ff0000',
               opacity: 0.5,
@@ -426,23 +493,19 @@ export default {
             fill: '#e6f7ff'
           }
         },
-        layout: {
-          type: 'indented',
-          direction: 'LR',
-          dropCap: false,
-          indent: 200,
-          getHeight: () => {
-            return 60
-          }
-        },
+        ...dendrogramLayout,
         modes: {
           default: ['drag-canvas', 'zoom-canvas', 'drag-node'] // 允许拖拽画布、放缩画布、拖拽节点
         },
+        fitView: true,
         // 设置为true，启用 redo & undo 栈功能
         enabledStack: true,
         fitViewPadding: [20, 30, 50, 20],
         plugins: [minimap, tooltip, toolbar]
       })
+
+      graph.refreshLayout(true)
+
       this.$nextTick(() => {
         graph.data(data) // 加载数据
         graph.render() // 渲染
