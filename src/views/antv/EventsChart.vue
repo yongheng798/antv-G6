@@ -6,6 +6,7 @@
 </template>
 
 <script>
+
 import G6 from '@antv/g6'
 // import insertCss from 'insert-css'
 export default {
