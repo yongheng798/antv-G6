@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-10 00:09:03
+ * @LastEditTime: 2020-09-11 00:44:07
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -145,10 +145,11 @@ export default {
       const toolbar = new G6.ToolBar()
 
       // 放大缩小
-      const minimap = new G6.ImageMinimap({
-        height: 100,
-        padding: 10,
-        graphImg: 'https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*DcGMQ7AN3Z0AAAAAAAAAAABkARQnAQ'
+      // 实例化 minimap 插件
+      const minimap = new G6.Minimap({
+        size: [100, 100],
+        className: 'minimap',
+        type: 'delegate'
       })
 
       const width = document.getElementById('mountNode').scrollWidth
@@ -252,7 +253,7 @@ export default {
           }
         },
         defaultEdge: {
-          type: 'cubic-vertical',
+          type: 'circle-running',
           style: {
             stroke: '#ff0000',
             // endArrow: true,默认
@@ -307,6 +308,19 @@ export default {
       graph.on('node:click', (ev) => {
         const node = ev.item
         graph.setItemState(node, 'hover', !node.hasState('default')) // 切换选中
+      })
+
+      // 鼠标经过边变换
+      // set hover state
+      graph.on('node:mouseenter', (ev) => {
+        const node = ev.item
+        const edges = node.getEdges()
+        edges.forEach((edge) => graph.setItemState(edge, 'running', true))
+      })
+      graph.on('node:mouseleave', (ev) => {
+        const node = ev.item
+        const edges = node.getEdges()
+        edges.forEach((edge) => graph.setItemState(edge, 'running', false))
       })
     },
 
@@ -389,22 +403,36 @@ export default {
           const group = item.getContainer()
           const shape = group.get('children')[0] // 顺序根据 draw 时确定
           const shape2 = group.get('children')[1] // 顺序根据 draw 时确定
-          if (name === 'collapsed') {
-            const marker = item.get('group').find((ele) => ele.get('name') === 'collapse-icon')
-            const icon = value ? G6.Marker.expand : G6.Marker.collapse
-            marker.attr('symbol', icon)
-          }
-          // 鼠标经过效果
-          if (name === 'hover') {
-            shape.attr('fill', 'red')
-            shape.attr('stroke', 'yellow')
-            shape2.attr('fill', '#003399')
-          } else if (name === 'default') {
-            shape.attr('fill', '#fff')
-            shape2.attr('fill', '#30BF78')
-          } else {
-            shape.attr('fill', '#fff')
-            shape2.attr('fill', '#30BF78')
+
+          // 采用switch
+          switch (name) {
+            case 'collapsed':
+              // eslint-disable-next-line no-case-declarations
+              const marker = item.get('group').find((ele) => ele.get('name') === 'collapse-icon')
+              // eslint-disable-next-line no-case-declarations
+              const icon = value ? G6.Marker.expand : G6.Marker.collapse
+              marker.attr('symbol', icon)
+              break
+            case 'hover':
+              shape.attr('fill', 'red')
+              shape.attr('stroke', 'yellow')
+              shape2.attr('fill', '#003399')
+              break
+            case 'default':
+              shape.attr('fill', 'red')
+              shape.attr('stroke', 'yellow')
+              shape2.attr('fill', '#003399')
+              break
+            case 'click':
+              shape.attr('fill', 'red')
+              shape.attr('stroke', 'yellow')
+              shape2.attr('fill', '#003399')
+              break
+            default:
+              shape.attr('fill', '#fff')
+              shape.attr('stroke', '#30BF78')
+              shape2.attr('fill', '#30BF78')
+              break
           }
         },
         update: null
@@ -448,9 +476,40 @@ export default {
                 duration: 3000 // the duration for executing once
               }
             )
+          },
+          setState(name, value, item) {
+            const shape = item.get('keyShape')
+            // lineDash array
+            const lineDash = [4, 2, 1, 2]
+            if (name === 'running') {
+              if (value) {
+                let index = 0
+                shape.animate(
+                  () => {
+                    index++
+                    if (index > 9) {
+                      index = 0
+                    }
+                    const res = {
+                      lineDash,
+                      lineDashOffset: -index
+                    }
+                    // return the params for this frame
+                    return res
+                  },
+                  {
+                    repeat: true,
+                    duration: 3000
+                  }
+                )
+              } else {
+                shape.stopAnimate()
+                shape.attr('lineDash', null)
+              }
+            }
           }
         },
-        'cubic' // extend the built-in edge 'cubic'
+        'cubic-horizontal' // extend the built-in edge 'cubic'
       )
     }
   }
