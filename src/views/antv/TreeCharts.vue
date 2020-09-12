@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-11 00:44:07
+ * @LastEditTime: 2020-09-12 17:48:46
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -23,6 +23,9 @@ export default {
     return {}
   },
   mounted() {
+    const e = document.createEvent('Event')
+    e.initEvent('resize', true, true)
+    window.dispatchEvent(e)
     console.log(G6.Global.version)
     this.initChart()
   },
@@ -183,9 +186,11 @@ export default {
         layout: {
           type: 'dendrogram',
           direction: 'LR', // H / V / LR / RL / TB / BT
-          nodeSep: 320,
-          rankSep: 320,
-          radial: false
+          nodeSep: 320, // 同层次节点之间的间距
+          rankSep: 320, // 相邻层级节点之间的间距
+          nodeSize: 20, // 节点大小
+          subTreeSep: 10, // 子树之间的间距
+          isHorizontal: true // 是否是水平方向，默认为水平方向
         }
       }
       console.log(dendrogramLayout)
@@ -255,13 +260,13 @@ export default {
         defaultEdge: {
           type: 'circle-running',
           style: {
-            stroke: '#ff0000',
+            stroke: '#555',
             // endArrow: true,默认
             endArrow: {
               // 箭头样式
               path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
-              fill: '#ff0000',
-              stroke: '#ff0000',
+              fill: '#555',
+              stroke: '#555',
               opacity: 0.5,
               lineWidth: 0
             }
@@ -277,7 +282,9 @@ export default {
         },
         ...indentedLayout,
         modes: {
-          default: ['drag-canvas', 'zoom-canvas', 'drag-node'] // 允许拖拽画布、放缩画布、拖拽节点
+          default: [
+            'drag-canvas', 'zoom-canvas', 'drag-node'
+          ] // 允许拖拽画布、放缩画布、拖拽节点
         },
         fitView: true,
         // 设置为true，启用 redo & undo 栈功能
@@ -286,41 +293,38 @@ export default {
         plugins: [minimap, tooltip, toolbar]
       })
 
-      graph.refreshLayout(true)
-
-      this.$nextTick(() => {
-        graph.data(data) // 加载数据
-        graph.render() // 渲染
-        graph.fitView()
-      })
+      graph.layout(true)
+      graph.data(data) // 加载数据
+      graph.render() // 渲染
+      graph.fitView()
       // 鼠标经过交互事件
       graph.on('node:mouseenter', (evt) => {
         const { item } = evt
         graph.setItemState(item, 'hover', true)
+        const edges = item.getEdges()// 获取与当前节点有关联的所有边
+        // const node = item.getAnchorPoints()
+        console.log('node获取节点上面定义的锚点', evt)
+        console.log('item====', item)
+        edges.forEach((edge) => graph.setItemState(edge, 'running', true))
       })
       graph.on('node:mouseleave', (evt) => {
         const { item } = evt
         graph.setItemState(item, 'default', false)
         // 取消多个状态
         graph.clearItemStates(item, ['bodyState:health', 'hover', 'active'])
+        const edges = item.getEdges()
+        edges.forEach((edge) => graph.setItemState(edge, 'running', false))
       })
       // 点击时选中，再点击时取消
-      graph.on('node:click', (ev) => {
-        const node = ev.item
-        graph.setItemState(node, 'hover', !node.hasState('default')) // 切换选中
-      })
-
-      // 鼠标经过边变换
-      // set hover state
-      graph.on('node:mouseenter', (ev) => {
-        const node = ev.item
-        const edges = node.getEdges()
-        edges.forEach((edge) => graph.setItemState(edge, 'running', true))
-      })
-      graph.on('node:mouseleave', (ev) => {
-        const node = ev.item
-        const edges = node.getEdges()
-        edges.forEach((edge) => graph.setItemState(edge, 'running', false))
+      graph.on('node:click', (evt) => {
+        const { item } = evt
+        graph.setItemState(item, 'hover', !item.hasState('default')) // 切换选中
+        // 展开收缩
+        if (evt.target.get('name') === 'collapse-icon') {
+          item.getModel().collapsed = !item.getModel().collapsed
+          graph.setItemState(item, 'collapsed', item.getModel().collapsed)
+          graph.layout()
+        }
       })
     },
 
@@ -329,6 +333,8 @@ export default {
       // 自定义节点1
       G6.registerNode('card-node', {
         draw: function drawShape(cfg, group) {
+          console.log('节点的cfg', cfg)
+          console.log('节点的group', group)
           const r = 2
           const color = cfg.error ? '#F4664A' : '#30BF78'
           const w = cfg.size[0]
@@ -376,13 +382,14 @@ export default {
       group.addShape('marker', {
         attrs: {
           x: w / 2,
-          y: 0,
+          y: -h / 4,
           r: 6,
           cursor: 'pointer',
           symbol: G6.Marker.collapse,
           stroke: '#666',
           lineWidth: 1,
-          fill: '#fff'
+          fill: '#fff',
+          isCollapseShape: true
         },
         name: 'collapse-icon'
       })
@@ -397,6 +404,34 @@ export default {
             },
             name: `description`
           })
+
+          // 百分占比条条形
+          group.addShape('rect', {
+            attrs: {
+              x: -w / 2.1,
+              y: -h / 8,
+              width: w - 10, // 200,
+              height: 10, // 60
+              fill: '#ccc',
+              radius: [r, r, r, r]
+            },
+            name: 'percentage-box1',
+            draggable: true
+          })
+
+          group.addShape('rect', {
+            attrs: {
+              x: -w / 2.1,
+              y: -h / 8,
+              width: (w - 10) * 0.5, // 200,
+              height: 10, // 60
+              fill: 'red',
+              radius: [r, r, r, r]
+            },
+            name: 'percentage-box1',
+            draggable: true
+          })
+
           return shape
         },
         setState(name, value, item) {
@@ -435,7 +470,14 @@ export default {
               break
           }
         },
-        update: null
+        update: null,
+        // 边的位置
+        getAnchorPoints() {
+          return [
+            [0, 0.25],
+            [1, 0.25]
+          ]
+        }
       })
 
       // 边动画
@@ -444,43 +486,43 @@ export default {
         {
           afterDraw(cfg, group) {
             // get the first shape in the group, it is the edge's path here=
-            const shape = group.get('children')[0]
+            // const shape = group.get('children')[0]
             // the start position of the edge's path
-            const startPoint = shape.getPoint(0)
+            // const startPoint = shape.getPoint(0)
 
             // add red circle shape
-            const circle = group.addShape('circle', {
-              attrs: {
-                x: startPoint.x,
-                y: startPoint.y,
-                fill: '#1890ff',
-                r: 3
-              },
-              name: 'circle-shape'
-            })
+            // const circle = group.addShape('circle', {
+            //   attrs: {
+            //     x: startPoint.x,
+            //     y: startPoint.y,
+            //     fill: '#1890ff',
+            //     r: 3
+            //   },
+            //   name: 'circle-shape'
+            // })
 
             // animation for the red circle
-            circle.animate(
-              (ratio) => {
-                // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
-                // get the position on the edge according to the ratio
-                const tmpPoint = shape.getPoint(ratio)
-                // returns the modified configurations here, x and y here
-                return {
-                  x: tmpPoint.x,
-                  y: tmpPoint.y
-                }
-              },
-              {
-                repeat: true, // Whether executes the animation repeatly
-                duration: 3000 // the duration for executing once
-              }
-            )
+            // circle.animate(
+            //   (ratio) => {
+            //     // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+            //     // get the position on the edge according to the ratio
+            //     const tmpPoint = shape.getPoint(ratio)
+            //     // returns the modified configurations here, x and y here
+            //     return {
+            //       x: tmpPoint.x,
+            //       y: tmpPoint.y
+            //     }
+            //   },
+            //   {
+            //     repeat: true, // Whether executes the animation repeatly
+            //     duration: 3000 // the duration for executing once
+            //   }
+            // )
           },
           setState(name, value, item) {
             const shape = item.get('keyShape')
             // lineDash array
-            const lineDash = [4, 2, 1, 2]
+            const lineDash = [2, 2, 2, 2]
             if (name === 'running') {
               if (value) {
                 let index = 0
@@ -492,7 +534,16 @@ export default {
                     }
                     const res = {
                       lineDash,
-                      lineDashOffset: -index
+                      stroke: 'red',
+                      lineDashOffset: -index,
+                      endArrow: {
+                        // 箭头样式
+                        path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
+                        fill: 'red',
+                        stroke: 'red',
+                        opacity: 0.5,
+                        lineWidth: 0
+                      }
                     }
                     // return the params for this frame
                     return res
@@ -504,7 +555,19 @@ export default {
                 )
               } else {
                 shape.stopAnimate()
-                shape.attr('lineDash', null)
+                shape.attr(
+                  { lineDash: null,
+                    stroke: '#555',
+                    endArrow: {
+                      // 箭头样式
+                      path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
+                      fill: '#555',
+                      stroke: '#555',
+                      opacity: 0.5,
+                      lineWidth: 0
+                    }
+                  }
+                )
               }
             }
           }

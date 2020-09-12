@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:10:05
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-11 00:52:56
+ * @LastEditTime: 2020-09-12 15:22:01
  */
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -40,6 +40,11 @@ const routes = [
     path: '/ProcessHtml',
     name: 'ProcessHtml',
     component: () => import('../views/antv/ProcessHtml.vue')
+  },
+  {
+    path: '/chartTs',
+    name: 'chartTs',
+    component: () => import('../views/antv/chartTs.vue')
   }
 ]
 

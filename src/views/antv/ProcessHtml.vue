@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-11 00:50:15
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-11 00:54:20
+ * @LastEditTime: 2020-09-11 00:57:07
 -->
 <template>
   <div class="process-wrapper" :class="{'addGray':addGray}">
@@ -40,8 +40,8 @@ export default {
 
 <style lang="less" scoped>
 .process-wrapper {
-  width: 19.8rem;
-  height: 3rem;
+  width: 500px;
+  height: 50px;
   margin: 0.12rem 0 0.1rem 0;
   border-radius: 1rem;
   background: #fff;
