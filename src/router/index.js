@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:10:05
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-12 15:22:01
+ * @LastEditTime: 2020-09-13 09:50:37
  */
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -45,6 +45,11 @@ const routes = [
     path: '/chartTs',
     name: 'chartTs',
     component: () => import('../views/antv/chartTs.vue')
+  },
+  {
+    path: '/treeCollapsed',
+    name: 'treeCollapsed',
+    component: () => import('../views/antv/treeCollapsed.vue')
   }
 ]
 

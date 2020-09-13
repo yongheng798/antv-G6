@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:10:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-11 00:52:48
+ * @LastEditTime: 2020-09-13 09:44:08
 -->
 <template>
   <div id="app">
@@ -13,7 +13,8 @@
       <router-link to="/about">About</router-link> |
       <router-link to="/treeCharts">TreeCharts</router-link> |
       <router-link to="/ProcessHtml">ProcessHtml</router-link> |
-      <router-link to="/eventsChart">EventsChart</router-link>
+      <router-link to="/eventsChart">EventsChart</router-link> |
+      <router-link to="/treeCollapsed">treeCollapsed</router-link>
     </div>
     <router-view />
   </div>

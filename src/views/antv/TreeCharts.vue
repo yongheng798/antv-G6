@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-12 17:48:46
+ * @LastEditTime: 2020-09-13 09:56:28
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -20,14 +20,18 @@ import insertCss from 'insert-css'
 
 export default {
   data() {
-    return {}
+    return {
+      level: 3
+    }
   },
   mounted() {
-    const e = document.createEvent('Event')
-    e.initEvent('resize', true, true)
-    window.dispatchEvent(e)
-    console.log(G6.Global.version)
-    this.initChart()
+    this.$nextTick(() => {
+      const e = document.createEvent('Event')
+      e.initEvent('resize', true, true)
+      window.dispatchEvent(e)
+      console.log(G6.Global.version)
+      this.initChart()
+    })
   },
   methods: {
     initChart() {
@@ -51,27 +55,33 @@ export default {
         id: 'A',
         x: 20,
         y: 20,
+        collapsed: false,
         children: [
           {
             id: 'A1',
             x: 20,
             y: 20,
+            collapsed: false,
             children: [
               { id: 'A11',
                 x: 20,
-                y: 20
+                y: 20,
+                collapsed: false
               },
               { id: 'A12',
                 x: 20,
-                y: 20
+                y: 20,
+                collapsed: false
               },
               { id: 'A13',
                 x: 20,
-                y: 20
+                y: 20,
+                collapsed: false
               },
               { id: 'A14',
                 x: 20,
-                y: 20
+                y: 20,
+                collapsed: false
               }
             ]
           },
@@ -79,24 +89,29 @@ export default {
             id: 'A2',
             x: 20,
             y: 20,
+            collapsed: true,
             children: [
               {
                 id: 'A21',
+                collapsed: false,
                 children: [
                   { id: 'A211',
                     x: 20,
-                    y: 20
+                    y: 20,
+                    collapsed: false
                   },
                   { id: 'A212',
                     x: 20,
-                    y: 20
+                    y: 20,
+                    collapsed: false
                   }
                 ]
               },
               {
                 id: 'A22',
                 x: 20,
-                y: 20
+                y: 20,
+                collapsed: true
               }
             ]
           }
@@ -287,6 +302,7 @@ export default {
           ] // 允许拖拽画布、放缩画布、拖拽节点
         },
         fitView: true,
+        // animate: true,
         // 设置为true，启用 redo & undo 栈功能
         enabledStack: true,
         fitViewPadding: [20, 30, 50, 20],
@@ -297,6 +313,9 @@ export default {
       graph.data(data) // 加载数据
       graph.render() // 渲染
       graph.fitView()
+
+      // 修复拖拽留痕
+      graph.get('canvas').set('localRefresh', false)
       // 鼠标经过交互事件
       graph.on('node:mouseenter', (evt) => {
         const { item } = evt
@@ -371,9 +390,11 @@ export default {
             attrs: {
               textBaseline: 'top',
               x: -w / 2 + 8,
-              y: -h / 2 + 2,
+              y: -h / 2 + 10,
               lineHeight: 20,
               text: cfg.id,
+              fontSize: 14,
+              fontWeight: 600,
               fill: '#fff'
             },
             name: 'title'
@@ -409,7 +430,7 @@ export default {
           group.addShape('rect', {
             attrs: {
               x: -w / 2.1,
-              y: -h / 8,
+              y: -h / 20,
               width: w - 10, // 200,
               height: 10, // 60
               fill: '#ccc',
@@ -422,7 +443,7 @@ export default {
           group.addShape('rect', {
             attrs: {
               x: -w / 2.1,
-              y: -h / 8,
+              y: -h / 20,
               width: (w - 10) * 0.5, // 200,
               height: 10, // 60
               fill: 'red',
@@ -439,6 +460,15 @@ export default {
           const shape = group.get('children')[0] // 顺序根据 draw 时确定
           const shape2 = group.get('children')[1] // 顺序根据 draw 时确定
 
+          // 自定义经过效果和默认效果样式
+          const hoverStyle = {
+            fill: 'red',
+            stroke: 'yellow'
+          }
+          const defaultStyle = {
+            fill: '#fff',
+            stroke: '#30BF78'
+          }
           // 采用switch
           switch (name) {
             case 'collapsed':
@@ -449,28 +479,28 @@ export default {
               marker.attr('symbol', icon)
               break
             case 'hover':
-              shape.attr('fill', 'red')
-              shape.attr('stroke', 'yellow')
+              shape.attr(hoverStyle)
               shape2.attr('fill', '#003399')
               break
             case 'default':
-              shape.attr('fill', 'red')
-              shape.attr('stroke', 'yellow')
+              shape.attr(hoverStyle)
               shape2.attr('fill', '#003399')
               break
             case 'click':
-              shape.attr('fill', 'red')
-              shape.attr('stroke', 'yellow')
+              shape.attr(hoverStyle)
               shape2.attr('fill', '#003399')
               break
             default:
-              shape.attr('fill', '#fff')
-              shape.attr('stroke', '#30BF78')
+              shape.attr(defaultStyle)
               shape2.attr('fill', '#30BF78')
               break
           }
         },
         update: null,
+        // update(cfg, node) {
+        //   const group = node.getContainer()
+        //   this.updateLinkPoints(cfg, group)
+        // },
         // 边的位置
         getAnchorPoints() {
           return [
@@ -484,41 +514,41 @@ export default {
       G6.registerEdge(
         'circle-running',
         {
-          afterDraw(cfg, group) {
-            // get the first shape in the group, it is the edge's path here=
-            // const shape = group.get('children')[0]
-            // the start position of the edge's path
-            // const startPoint = shape.getPoint(0)
+          // afterDraw(cfg, group) {
+          //   // get the first shape in the group, it is the edge's path here=
+          //   const shape = group.get('children')[0]
+          //   // the start position of the edge's path
+          //   const startPoint = shape.getPoint(0)
 
-            // add red circle shape
-            // const circle = group.addShape('circle', {
-            //   attrs: {
-            //     x: startPoint.x,
-            //     y: startPoint.y,
-            //     fill: '#1890ff',
-            //     r: 3
-            //   },
-            //   name: 'circle-shape'
-            // })
+          //   // add red circle shape
+          //   const circle = group.addShape('circle', {
+          //     attrs: {
+          //       x: startPoint.x,
+          //       y: startPoint.y,
+          //       fill: '#1890ff',
+          //       r: 3
+          //     },
+          //     name: 'circle-shape'
+          //   })
 
-            // animation for the red circle
-            // circle.animate(
-            //   (ratio) => {
-            //     // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
-            //     // get the position on the edge according to the ratio
-            //     const tmpPoint = shape.getPoint(ratio)
-            //     // returns the modified configurations here, x and y here
-            //     return {
-            //       x: tmpPoint.x,
-            //       y: tmpPoint.y
-            //     }
-            //   },
-            //   {
-            //     repeat: true, // Whether executes the animation repeatly
-            //     duration: 3000 // the duration for executing once
-            //   }
-            // )
-          },
+          //   // animation for the red circle
+          //   circle.animate(
+          //     (ratio) => {
+          //       // the operations in each frame. Ratio ranges from 0 to 1 indicating the prograss of the animation. Returns the modified configurations
+          //       // get the position on the edge according to the ratio
+          //       const tmpPoint = shape.getPoint(ratio)
+          //       // returns the modified configurations here, x and y here
+          //       return {
+          //         x: tmpPoint.x,
+          //         y: tmpPoint.y
+          //       }
+          //     },
+          //     {
+          //       repeat: true, // Whether executes the animation repeatly
+          //       duration: 3000 // the duration for executing once
+          //     }
+          //   )
+          // },
           setState(name, value, item) {
             const shape = item.get('keyShape')
             // lineDash array
