@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-13 09:56:28
+ * @LastEditTime: 2020-09-13 14:15:00
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -274,6 +274,7 @@ export default {
         },
         defaultEdge: {
           type: 'circle-running',
+          // label: 'edge-label',
           style: {
             stroke: '#555',
             // endArrow: true,默认
@@ -297,9 +298,23 @@ export default {
         },
         ...indentedLayout,
         modes: {
-          default: [
+          default: [// 允许拖拽画布、放缩画布、拖拽节点
             'drag-canvas', 'zoom-canvas', 'drag-node'
-          ] // 允许拖拽画布、放缩画布、拖拽节点
+            // {
+            //   type: 'collapse-expand',
+            //   trigger: 'click',
+            //   onChange: (item, collapsed) => {
+            //     const data = item.get('model').data
+            //     data.collapsed = collapsed
+            //     return false
+            //   }
+            //   // shouldBegin: (e) => {
+            //   //   // 若当前操作的节点 id 为 'node1'，则不发生 collapse-expand
+            //   //   if (e.item && e.item.getModel().id === 'node1') return false
+            //   //   return true
+            //   // }
+            // }
+          ]
         },
         fitView: true,
         // animate: true,
@@ -356,6 +371,9 @@ export default {
           console.log('节点的group', group)
           const r = 2
           const color = cfg.error ? '#F4664A' : '#30BF78'
+          // 展开收缩样式
+          const collapseStyle = cfg.collapsed ? '#873bf4a1' : '#4caf509c'
+          const collapseText = cfg.collapsed ? '+' : '-'
           const w = cfg.size[0]
           const h = cfg.size[1]
           const shape = group.addShape('rect', {
@@ -406,10 +424,11 @@ export default {
           y: -h / 4,
           r: 6,
           cursor: 'pointer',
-          symbol: G6.Marker.collapse,
-          stroke: '#666',
+          symbol: cfg.collapsed ? G6.Marker.expand : G6.Marker.collapse,
+          stroke: collapseStyle,
           lineWidth: 1,
-          fill: '#fff',
+          text: collapseText,
+          fill: collapseStyle,
           isCollapseShape: true
         },
         name: 'collapse-icon'
@@ -476,6 +495,13 @@ export default {
               const marker = item.get('group').find((ele) => ele.get('name') === 'collapse-icon')
               // eslint-disable-next-line no-case-declarations
               const icon = value ? G6.Marker.expand : G6.Marker.collapse
+              // eslint-disable-next-line no-case-declarations
+              const collapseStyle = value ? '#873bf4a1' : '#4caf509c'
+              // eslint-disable-next-line no-case-declarations
+              const lineStyle = value ? 2 : 1
+              marker.attr('fill', collapseStyle)
+              marker.attr('stroke', collapseStyle)
+              marker.attr('lineWidth', lineStyle)
               marker.attr('symbol', icon)
               break
             case 'hover':
@@ -514,6 +540,32 @@ export default {
       G6.registerEdge(
         'circle-running',
         {
+          // draw(cfg, group) {
+          //   const startPoint = cfg.startPoint
+          //   const endPoint = cfg.endPoint
+          //   const shape = group.addShape('path', {
+          //     attrs: {
+          //       stroke: '#555',
+          //       path: [
+          //         ['M', startPoint.x, startPoint.y],
+          //         ['L', endPoint.x / 3 + (2 / 3) * startPoint.x, startPoint.y], // 三分之一处
+          //         ['L', endPoint.x / 3 + (2 / 3) * startPoint.x, endPoint.y], // 三分之二处
+          //         ['L', endPoint.x, endPoint.y]
+          //       ],
+          //       endArrow: {
+          //         // 箭头样式
+          //         path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
+          //         fill: '#555',
+          //         stroke: '#555',
+          //         opacity: 0.5,
+          //         lineWidth: 0
+          //       }
+          //     },
+          //     // must be assigned in G6 3.3 and later versions. it can be any value you want
+          //     name: 'path-shape'
+          //   })
+          //   return shape
+          // },
           // afterDraw(cfg, group) {
           //   // get the first shape in the group, it is the edge's path here=
           //   const shape = group.get('children')[0]
@@ -549,8 +601,24 @@ export default {
           //     }
           //   )
           // },
+          // getPath(points) {
+          //   const path = []
+          //   path.push(['M', points[0].x, points[0].y])
+          //   path.push([
+          //     'C',
+          //     points[1].x,
+          //     points[1].y,
+          //     points[2].x,
+          //     points[2].y,
+          //     points[3].x,
+          //     points[3].y
+          //   ])
+          //   return path
+          // },
           setState(name, value, item) {
             const shape = item.get('keyShape')
+            // const startPoint = item.startPoint
+            // const endPoint = item.endPoint
             // lineDash array
             const lineDash = [2, 2, 2, 2]
             if (name === 'running') {
@@ -566,6 +634,12 @@ export default {
                       lineDash,
                       stroke: 'red',
                       lineDashOffset: -index,
+                      // path: [
+                      //   ['M', startPoint.x, startPoint.y],
+                      //   ['L', endPoint.x / 3 + (2 / 3) * startPoint.x, startPoint.y], // 三分之一处
+                      //   ['L', endPoint.x / 3 + (2 / 3) * startPoint.x, endPoint.y], // 三分之二处
+                      //   ['L', endPoint.x, endPoint.y]
+                      // ],
                       endArrow: {
                         // 箭头样式
                         path: G6.Arrow.vee(), // 使用内置箭头路径函数，参数为箭头的 宽度、长度、偏移量（默认为 0，与 d 对应）
