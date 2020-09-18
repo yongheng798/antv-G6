@@ -4,7 +4,7 @@
  * @Author: chenpinfu~陈品富
  * @Date: 2020-09-05 17:21:04
  * @LastEditors: chenpinfu~陈品富
- * @LastEditTime: 2020-09-13 14:15:00
+ * @LastEditTime: 2020-09-18 23:58:27
 -->
 <template>
   <!--g6 demo引用演示  -->
@@ -217,13 +217,13 @@ export default {
             return d.id
           },
           getHeight: function getHeight() {
-            return 200
-          },
-          getWidth: function getWidth() {
             return 100
           },
+          getWidth: function getWidth() {
+            return 220
+          },
           getVGap: function getVGap() {
-            return 60
+            return 10
           },
           getHGap: function getHGap() {
             return 30
@@ -296,7 +296,7 @@ export default {
             fill: '#e6f7ff'
           }
         },
-        ...indentedLayout,
+        ...compactBoxLayout,
         modes: {
           default: [// 允许拖拽画布、放缩画布、拖拽节点
             'drag-canvas', 'zoom-canvas', 'drag-node'
@@ -365,59 +365,61 @@ export default {
     // 自定义节点
     registerNodeFn() {
       // 自定义节点1
-      G6.registerNode('card-node', {
-        draw: function drawShape(cfg, group) {
-          console.log('节点的cfg', cfg)
-          console.log('节点的group', group)
-          const r = 2
-          const color = cfg.error ? '#F4664A' : '#30BF78'
-          // 展开收缩样式
-          const collapseStyle = cfg.collapsed ? '#873bf4a1' : '#4caf509c'
-          const collapseText = cfg.collapsed ? '+' : '-'
-          const w = cfg.size[0]
-          const h = cfg.size[1]
-          const shape = group.addShape('rect', {
-            attrs: {
-              x: -w / 2,
-              y: -h / 2,
-              width: w, // 200,
-              height: h, // 60
-              stroke: color,
-              radius: r,
-              fill: '#fff'
-            },
-            name: 'main-box',
-            draggable: true
-          })
+      G6.registerNode(
+        'card-node',
+        {
+          draw: function drawShape(cfg, group) {
+            console.log('节点的cfg', cfg)
+            console.log('节点的group', group)
+            const r = 2
+            const color = cfg.error ? '#F4664A' : '#30BF78'
+            // 展开收缩样式
+            const collapseStyle = cfg.collapsed ? '#873bf4a1' : '#4caf509c'
+            const collapseText = cfg.collapsed ? '+' : '-'
+            const w = cfg.size[0]
+            const h = cfg.size[1]
+            const shape = group.addShape('rect', {
+              attrs: {
+                x: -w / 2,
+                y: -h / 2,
+                width: w, // 200,
+                height: h, // 60
+                stroke: color,
+                radius: r,
+                fill: '#fff'
+              },
+              name: 'main-box',
+              draggable: true
+            })
 
-          group.addShape('rect', {
-            attrs: {
-              x: -w / 2,
-              y: -h / 2,
-              width: w, // 200,
-              height: h / 2, // 60
-              fill: color,
-              radius: [r, r, 0, 0]
-            },
-            name: 'title-box',
-            draggable: true
-          })
+            group.addShape('rect', {
+              attrs: {
+                x: -w / 2,
+                y: -h / 2,
+                width: w, // 200,
+                height: h / 2, // 60
+                fill: color,
+                radius: [r, r, 0, 0]
+              },
+              name: 'title-box',
+              draggable: true
+            })
 
-          // title text
-          group.addShape('text', {
-            attrs: {
-              textBaseline: 'top',
-              x: -w / 2 + 8,
-              y: -h / 2 + 10,
-              lineHeight: 20,
-              text: cfg.id,
-              fontSize: 14,
-              fontWeight: 600,
-              fill: '#fff'
-            },
-            name: 'title'
-          })
-          cfg.children &&
+            // title text
+            group.addShape('text', {
+              attrs: {
+                textBaseline: 'top',
+                x: -w / 2 + 8,
+                y: -h / 2 + 10,
+                lineHeight: 20,
+                text: cfg.id,
+                fontSize: 14,
+                fontWeight: 600,
+                fill: '#fff'
+              },
+              name: 'title'
+            })
+            cfg.children &&
       group.addShape('marker', {
         attrs: {
           x: w / 2,
@@ -433,108 +435,108 @@ export default {
         },
         name: 'collapse-icon'
       })
-          group.addShape('text', {
-            attrs: {
-              textBaseline: 'top',
-              x: -w / 2 + 8,
-              y: -h / 2 + 24,
-              lineHeight: 20,
-              text: 'description',
-              fill: 'rgba(0,0,0, 1)'
-            },
-            name: `description`
-          })
+            group.addShape('text', {
+              attrs: {
+                textBaseline: 'top',
+                x: -w / 2 + 8,
+                y: -h / 2 + 24,
+                lineHeight: 20,
+                text: 'description',
+                fill: 'rgba(0,0,0, 1)'
+              },
+              name: `description`
+            })
 
-          // 百分占比条条形
-          group.addShape('rect', {
-            attrs: {
-              x: -w / 2.1,
-              y: -h / 20,
-              width: w - 10, // 200,
-              height: 10, // 60
-              fill: '#ccc',
-              radius: [r, r, r, r]
-            },
-            name: 'percentage-box1',
-            draggable: true
-          })
+            // 百分占比条条形
+            group.addShape('rect', {
+              attrs: {
+                x: -w / 2.1,
+                y: -h / 20,
+                width: w - 10, // 200,
+                height: 10, // 60
+                fill: '#ccc',
+                radius: [r, r, r, r]
+              },
+              name: 'percentage-box1',
+              draggable: true
+            })
 
-          group.addShape('rect', {
-            attrs: {
-              x: -w / 2.1,
-              y: -h / 20,
-              width: (w - 10) * 0.5, // 200,
-              height: 10, // 60
+            group.addShape('rect', {
+              attrs: {
+                x: -w / 2.1,
+                y: -h / 20,
+                width: (w - 10) * 0.5, // 200,
+                height: 10, // 60
+                fill: 'red',
+                radius: [r, r, r, r]
+              },
+              name: 'percentage-box1',
+              draggable: true
+            })
+
+            return shape
+          },
+          setState(name, value, item) {
+            const group = item.getContainer()
+            const shape = group.get('children')[0] // 顺序根据 draw 时确定
+            const shape2 = group.get('children')[1] // 顺序根据 draw 时确定
+
+            // 自定义经过效果和默认效果样式
+            const hoverStyle = {
               fill: 'red',
-              radius: [r, r, r, r]
-            },
-            name: 'percentage-box1',
-            draggable: true
-          })
-
-          return shape
-        },
-        setState(name, value, item) {
-          const group = item.getContainer()
-          const shape = group.get('children')[0] // 顺序根据 draw 时确定
-          const shape2 = group.get('children')[1] // 顺序根据 draw 时确定
-
-          // 自定义经过效果和默认效果样式
-          const hoverStyle = {
-            fill: 'red',
-            stroke: 'yellow'
+              stroke: 'yellow'
+            }
+            const defaultStyle = {
+              fill: '#fff',
+              stroke: '#30BF78'
+            }
+            // 采用switch
+            switch (name) {
+              case 'collapsed':
+              // eslint-disable-next-line no-case-declarations
+                const marker = item.get('group').find((ele) => ele.get('name') === 'collapse-icon')
+                // eslint-disable-next-line no-case-declarations
+                const icon = value ? G6.Marker.expand : G6.Marker.collapse
+                // eslint-disable-next-line no-case-declarations
+                const collapseStyle = value ? '#873bf4a1' : '#4caf509c'
+                // eslint-disable-next-line no-case-declarations
+                const lineStyle = value ? 2 : 1
+                marker.attr('fill', collapseStyle)
+                marker.attr('stroke', collapseStyle)
+                marker.attr('lineWidth', lineStyle)
+                marker.attr('symbol', icon)
+                break
+              case 'hover':
+                shape.attr(hoverStyle)
+                shape2.attr('fill', '#003399')
+                break
+              case 'default':
+                shape.attr(hoverStyle)
+                shape2.attr('fill', '#003399')
+                break
+              case 'click':
+                shape.attr(hoverStyle)
+                shape2.attr('fill', '#003399')
+                break
+              default:
+                shape.attr(defaultStyle)
+                shape2.attr('fill', '#30BF78')
+                break
+            }
+          },
+          update: null,
+          // update(cfg, node) {
+          //   const group = node.getContainer()
+          //   this.updateLinkPoints(cfg, group)
+          // },
+          // 边的位置
+          getAnchorPoints() {
+            return [
+              [0, 0.25],
+              [1, 0.25]
+            ]
           }
-          const defaultStyle = {
-            fill: '#fff',
-            stroke: '#30BF78'
-          }
-          // 采用switch
-          switch (name) {
-            case 'collapsed':
-              // eslint-disable-next-line no-case-declarations
-              const marker = item.get('group').find((ele) => ele.get('name') === 'collapse-icon')
-              // eslint-disable-next-line no-case-declarations
-              const icon = value ? G6.Marker.expand : G6.Marker.collapse
-              // eslint-disable-next-line no-case-declarations
-              const collapseStyle = value ? '#873bf4a1' : '#4caf509c'
-              // eslint-disable-next-line no-case-declarations
-              const lineStyle = value ? 2 : 1
-              marker.attr('fill', collapseStyle)
-              marker.attr('stroke', collapseStyle)
-              marker.attr('lineWidth', lineStyle)
-              marker.attr('symbol', icon)
-              break
-            case 'hover':
-              shape.attr(hoverStyle)
-              shape2.attr('fill', '#003399')
-              break
-            case 'default':
-              shape.attr(hoverStyle)
-              shape2.attr('fill', '#003399')
-              break
-            case 'click':
-              shape.attr(hoverStyle)
-              shape2.attr('fill', '#003399')
-              break
-            default:
-              shape.attr(defaultStyle)
-              shape2.attr('fill', '#30BF78')
-              break
-          }
-        },
-        update: null,
-        // update(cfg, node) {
-        //   const group = node.getContainer()
-        //   this.updateLinkPoints(cfg, group)
-        // },
-        // 边的位置
-        getAnchorPoints() {
-          return [
-            [0, 0.25],
-            [1, 0.25]
-          ]
-        }
-      })
+        }, 'single-node')
 
       // 边动画
       G6.registerEdge(
